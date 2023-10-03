@@ -29,7 +29,7 @@ Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, IO_USERNAME, IO_K
 // Notice MQTT paths for AIO follow the form: <username>/feeds/<feedname>
 
 // Setup a feed called 'onoff' for subscribing to changes.
-Adafruit_MQTT_Subscribe led1= Adafruit_MQTT_Subscribe(&mqtt, IO_USERNAME "/feeds/led1", MQTT_QOS_1);
+Adafruit_MQTT_Publish sensor = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/led1", MQTT_QOS_1);
 
 
 /*************************** Sketch Code ************************************/
@@ -59,8 +59,8 @@ void setup() {
   Serial.println("WiFi connected");
   Serial.println("IP address: "); Serial.println(WiFi.localIP());
 
-  // Setup MQTT subscription for onoff feed.
-  mqtt.subscribe(&led1);
+
+  mqtt.publish(&sensor);
 }
 
 uint32_t x=0;
@@ -74,7 +74,7 @@ void loop() {
   // this is our 'wait for incoming subscription packets' busy subloop
   // try to spend your time here
 
-  Adafruit_MQTT_Subscribe *subscription;
+  Adafruit_MQTT_Publish *subcription;
   while ((subscription = mqtt.readSubscription(5000))) {
     if (subscription == &led1) {
       Serial.print(F("Got: "));
