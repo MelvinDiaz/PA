@@ -33,7 +33,7 @@ void MQTT_connect();
 
 #define DHTPIN 2     // Digital pin connected to the DHT sensor 
 
-#define DHTTYPE    DHT22     // DHT 22 (AM2302)
+#define DHTTYPE    DHT11     // DHT 22 (AM2302)
 
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
@@ -88,7 +88,8 @@ void setup() {
 }
 
 void loop() {
-  MQTT_connect();
+ MQTT_connect();
+
   // Delay between measurements.
   delay(delayMS);
 
