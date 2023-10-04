@@ -17,6 +17,9 @@ Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, IO_USERNAME, IO_K
 
 Adafruit_MQTT_Publish adafruitHumidity = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/Humedad", MQTT_QOS_1);
 Adafruit_MQTT_Publish adafruitTemperature = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/Temperature", MQTT_QOS_1);
+Adafruit_MQTT_Publish adafruitLuminosity = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/lecturaLuminosidad", MQTT_QOS_1);
+Adafruit_MQTT_Publish adafruitCondition = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/condicionInvernadero", MQTT_QOS_1);
+
 
 
 void MQTT_connect();
@@ -30,6 +33,7 @@ void readSensorInfo();
 //DHT information
 #define DHTPIN 2     // Digital pin connected to the DHT sensor 
 #define DHTTYPE    DHT11     // DHT 22 (AM2302)
+#define led 13
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
@@ -38,6 +42,7 @@ uint32_t delayMS;
 void setup() {
   Serial.begin(9600);
   // Initialize device.
+  pinMode(led, OUTPUT);
   dht.begin();
   Serial.println(F("DHTxx Unified Sensor Example"));
   //DHT code
@@ -47,7 +52,7 @@ void setup() {
 
   // Set delay between sensor readings
   //delayMS = sensor.min_delay / 1000;
-  delayMS = 5000;
+  delayMS = 7000;
 
 //Connecting to wifi
   connectToWifi();
@@ -57,9 +62,16 @@ void setup() {
 void loop() {
   // Connect to mqtt
   MQTT_connect();
+  delay(delayMS);
+
 
   // Delay between measurements.
-  delay(delayMS);
+  
+  int valorLeido = analogRead(A0);
+  float voltaje = (float)valorLeido/1023*3.3;
+
+  adafruitLuminosity.publish(voltaje);
+
   // Get temperature event and print its value.
   readSensorInfo();
 }
@@ -78,6 +90,14 @@ void readSensorInfo(){
   else {
     Serial.print(F("Temperature: "));
     adafruitTemperature.publish(event.temperature);
+    if (event.temperature > 25.0) {
+      adafruitCondition.publish("El invernadero esta en peligro");
+      digitalWrite(led, HIGH);
+    }
+    else {
+    adafruitCondition.publish("SIN PELIGRO");
+      digitalWrite(led, LOW);
+    }
     Serial.print(event.temperature);
     Serial.println(F("°C"));
   }
@@ -89,10 +109,18 @@ void readSensorInfo(){
   else {
     Serial.print(F("Humidity: "));
     adafruitHumidity.publish(event.relative_humidity);
+    if (event.relative_humidity > 80.0) {
+      adafruitCondition.publish("El invernadero esta en peligro");
+      digitalWrite(led, HIGH);
+    }
+     else {
+    adafruitCondition.publish("SIN PELIGRO");
+      digitalWrite(led, LOW);
+    }
     Serial.print(event.relative_humidity);
     Serial.println(F("%"));
-  }
-}
+  }}
+
 
 void connectToWifi(){
   Serial.println(); Serial.println();
